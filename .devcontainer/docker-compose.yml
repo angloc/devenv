@@ -1,0 +1,81 @@
+# docker-compose.yml for webcomponents development environment
+# Replicates the .devcontainer configuration for standalone use
+#
+# IMPORTANT: This file mirrors .devcontainer/devcontainer.json
+# Any changes to mounts, ports, or configuration should be synchronized between:
+# - This docker-compose.yml
+# - .devcontainer/devcontainer.json
+# - Dockerfile
+
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: webcomponents-dev
+    
+    # Mount the project directory
+    volumes:
+      # Project files
+      - ..:/workspace
+      
+      # SSH keys (read-only mount from host)
+      # For Linux/Mac users:
+      # - ${HOME}/.ssh:/home/vscode/.ssh-readonly:ro
+      # For Windows users:
+      - ${USERPROFILE}/.ssh:/home/vscode/.ssh-readonly:ro
+      
+      # Docker-in-Docker volume
+      - docker-dind-data:/var/lib/docker
+    
+    # Port mappings
+    ports:
+      - "8080:8080"   # Application server
+      - "6080:6080"   # noVNC web interface
+      - "5901:5901"   # VNC server
+    
+    # Working directory
+    working_dir: /workspace
+    
+    # Docker-in-Docker requires privileged mode
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    
+    # Run postCreateCommand.sh on startup, then start Docker daemon as main process
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        # Run the postCreateCommand script if it exists
+        if [ -f ./.devcontainer/postCreateCommand.sh ]; then
+          echo "Running postCreateCommand.sh..."
+          chmod +x ./.devcontainer/postCreateCommand.sh 2>/dev/null || true
+          bash ./.devcontainer/postCreateCommand.sh
+        fi
+        
+        # Start VNC server (optional - uncomment if needed)
+        # mkdir -p /home/vscode/.vnc
+        # echo "vscode" | vncpasswd -f > /home/vscode/.vnc/passwd
+        # chmod 600 /home/vscode/.vnc/passwd
+        # vncserver :1 -geometry 1920x1080 -depth 24
+        
+        # Start noVNC (optional - uncomment if needed)
+        # /usr/local/novnc/utils/novnc_proxy --vnc localhost:5901 --listen 6080 &
+        
+        # Start Docker daemon as the main process (foreground)
+        echo "Starting Docker daemon as main process..."
+        exec sudo dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375
+    
+    # Environment variables
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - DISPLAY=:1
+    
+    # Ensure proper permissions for Docker socket
+    user: vscode
+    group_add:
+      - docker
+
+# Docker-in-Docker volume
+volumes:
+  docker-dind-data:

@@ -1,0 +1,9 @@
+{
+  "name": "devenv-tools",
+  "version": "1.0.0",
+  "description": "Shared NPM tools for the development environment",
+  "scripts": {},
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

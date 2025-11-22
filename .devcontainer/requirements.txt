@@ -1,0 +1,9 @@
+ruff
+PyYAML
+Jinja2
+kubernetes
+requests
+pytest
+
+# Custom wheel for onefilellm
+./vendor/wheels/onefilellm-0.1.0-py3-none-any.whl
