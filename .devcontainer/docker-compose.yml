@@ -1,4 +1,4 @@
-# docker-compose.yml for webcomponents development environment
+# docker-compose.yml for general development environment
 # Replicates the .devcontainer configuration for standalone use
 #
 # IMPORTANT: This file mirrors .devcontainer/devcontainer.json
@@ -12,7 +12,7 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
-    container_name: webcomponents-dev
+    container_name: dev
     
     # Mount the project directory
     volumes:
@@ -72,6 +72,51 @@ services:
       - DISPLAY=:1
     
     # Ensure proper permissions for Docker socket
+    user: vscode
+    group_add:
+      - docker
+
+  jupyter:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: jupyter
+    # Mount the project directory
+    volumes:
+      # Project files
+      - ..:/workspace
+      
+      # SSH keys (read-only mount from host)
+      # For Linux/Mac users:
+      # - ${HOME}/.ssh:/home/vscode/.ssh-readonly:ro
+      # For Windows users:
+      - ${USERPROFILE}/.ssh:/home/vscode/.ssh-readonly:ro
+      
+    ports:
+      - "8888:8888"
+    
+    working_dir: /workspace
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        if [ -f ./.devcontainer/postCreateCommand.sh ]; then
+          echo "Running postCreateCommand.sh..."
+          chmod +x ./.devcontainer/postCreateCommand.sh 2>/dev/null || true
+          bash ./.devcontainer/postCreateCommand.sh
+        fi
+
+        echo "Starting JupyterLab..."
+        mkdir -p /workspace/projects
+        jupyter lab --notebook-dir=/workspace/projects --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
+    
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - DOCKER_HOST=tcp://dev:2375
+    
     user: vscode
     group_add:
       - docker

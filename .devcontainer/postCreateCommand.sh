@@ -27,8 +27,10 @@ sudo mkdir -p ~/.ssh && \
     sudo chown -R vscode  ~/.ssh
 
 # Ensure the Docker daemon socket is available to the vscode user
-sudo chown root:docker /var/run/docker.sock
-sudo chmod 660 /var/run/docker.sock
+if [ -e /var/run/docker.sock ]; then
+    sudo chown root:docker /var/run/docker.sock
+    sudo chmod 660 /var/run/docker.sock
+fi
 sudo usermod -aG docker vscode
 
 # Make ruff etcetera available to the vscode user

@@ -1,4 +1,4 @@
-# Dockerfile for webcomponents development environment
+# Dockerfile for generalised development environment
 # Replicates the .devcontainer configuration for standalone use
 #
 # IMPORTANT: This file mirrors .devcontainer/devcontainer.json
@@ -57,11 +57,11 @@ RUN mkdir -p /usr/local/novnc \
 #     && mv kubectl /usr/local/bin/
 
 # Install Google Chrome
-# RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb \
-#     && apt-get update \
-#     && apt-get install -y /tmp/chrome.deb || apt-get -y -f install \
-#     && rm /tmp/chrome.deb \
-#     && rm -rf /var/lib/apt/lists/*
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb \
+    && apt-get update \
+    && apt-get install -y /tmp/chrome.deb || apt-get -y -f install \
+    && rm /tmp/chrome.deb \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Docker CE
 RUN apt-get update && apt-get install -y \
@@ -80,9 +80,13 @@ RUN apt-get update \
     && apt-get install -y nodejs npm \
     && rm -rf /var/lib/apt/lists/*
 
+# Install JupyterLab
+RUN pip install --no-cache-dir jupyterlab
+
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV DISPLAY=:1
+ENV PATH=$PATH:/home/vscode/.local/bin
 
 # Ensure 'docker' group exists and add vscode to it (for Docker socket access)
 # This satisfies docker-compose group_add: docker and avoids startup error when the group is missing.
