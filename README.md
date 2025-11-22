@@ -20,6 +20,37 @@ All Docker configuration files are co-located in `.devcontainer`. When making ch
   - **`requirements.txt`**: Standard Python dependencies (formerly `dev-requirements.txt`).
   - **`package.json`**: Shared Node.js/NPM tools (e.g., `esbuild`).
   - **`postCreateCommand.sh`**: Setup script that installs dependencies and configures the environment on startup.
+- **`projects/`**: Directory where individual child projects should be located (ignored by git in the root repo).
+
+## Multi-Project Development
+
+This environment is designed to support developing multiple distinct projects simultaneously.
+
+### Project Structure
+
+- Individual projects should be placed as strict children of the `projects` directory.
+- Each project should be its own independent Git repository.
+- All projects share the running `devenv` container for development tools.
+
+### Workflow
+
+1. **Start the Toolbox**: Run `docker compose up` (or `make up`) in this root directory.
+2. **Enter the Container**: Run `make shell` to enter the `devenv` container.
+3. **Navigate to Project**: Inside the shell, switch to your project context:
+   ```bash
+   cd projects/your_specific_project
+   ```
+
+### Building and Running Projects
+
+While you rely on the `devenv` container for common development tools (git, python, editors, etc.), you should build and run your applications in their own specific contexts. This ensures isolation and avoids modifying the main toolbox environment.
+
+Common approaches include:
+
+- **JupyterLab**: Open a notebook for data science or interactive coding.
+- **Docker**: Build and run a container from the project's `Dockerfile` using the `docker` command available inside the toolbox (via Docker-in-Docker).
+- **Docker Compose**: Orchestrate the project's services using its own `docker-compose.yml`.
+- **Kubernetes**: Deploy to a local cluster using `minikube` and `helm` (if enabled).
 
 ## Quick Start
 
