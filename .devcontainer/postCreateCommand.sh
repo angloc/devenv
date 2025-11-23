@@ -73,12 +73,12 @@ pip install --no-cache-dir -r ./.devcontainer/requirements.txt
 # sudo mv kubectl /usr/local/bin/
 
 # Install Google Chrome
-#echo "Installing Google Chrome..."
-#sudo apt-get update -y
-#sudo apt-get install -y wget gnupg
-#wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-#sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -y -f install
-#rm google-chrome-stable_current_amd64.deb
+# echo "Installing Google Chrome..."
+# sudo apt-get update -y
+# sudo apt-get install -y wget gnupg
+# wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+# sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -y -f install
+# rm google-chrome-stable_current_amd64.deb
 
 export PYTHONDONTWRITEBYTECODE=1
 

@@ -39,6 +39,7 @@ services:
     
     # Docker-in-Docker requires privileged mode
     privileged: true
+    init: true
     security_opt:
       - seccomp:unconfined
     
@@ -54,13 +55,36 @@ services:
         fi
         
         # Start VNC server (optional - uncomment if needed)
-        # mkdir -p /home/vscode/.vnc
-        # echo "vscode" | vncpasswd -f > /home/vscode/.vnc/passwd
-        # chmod 600 /home/vscode/.vnc/passwd
-        # vncserver :1 -geometry 1920x1080 -depth 24
+        # Cleanup pre-existing locks to ensure clean start
+        vncserver -kill :1 2>/dev/null || true
+        rm -rf /tmp/.X11-unix/X1 /tmp/.X1-lock 2>/dev/null || true
         
+        sudo chown -R vscode:vscode /home/vscode/.vnc
+        mkdir -p /home/vscode/.vnc
+        echo "vscode" | vncpasswd -f > /home/vscode/.vnc/passwd
+        chmod 600 /home/vscode/.vnc/passwd
+        # Start VNC with localhost no to avoid IPv4/IPv6 binding issues
+        vncserver :1 -geometry 1920x1080 -depth 24 -localhost no
+        
+        # Debug VNC startup
+        sleep 1
+        echo "VNC Status:"
+        vncserver -list
+        if [ -f /home/vscode/.vnc/*:1.log ]; then cat /home/vscode/.vnc/*:1.log; fi
+
         # Start noVNC (optional - uncomment if needed)
-        # /usr/local/novnc/utils/novnc_proxy --vnc localhost:5901 --listen 6080 &
+        # Set up default index page for nicer experience
+        if [ -d /usr/local/novnc ] && [ ! -f /usr/local/novnc/index.html ]; then
+            sudo ln -s vnc.html /usr/local/novnc/index.html
+        fi
+
+        if [ -f /usr/local/novnc/utils/novnc_proxy ]; then
+            /usr/local/novnc/utils/novnc_proxy --vnc localhost:5901 --listen 6080 &
+        elif [ -f /usr/local/novnc/utils/launch.sh ]; then
+            /usr/local/novnc/utils/launch.sh --vnc localhost:5901 --listen 6080 &
+        else
+            echo "noVNC proxy script not found!"
+        fi
         
         # Start Docker daemon as the main process (foreground)
         echo "Starting Docker daemon as main process..."

@@ -28,13 +28,14 @@ RUN apt-get update && apt-get install -y \
     x11-utils \
     x11-xserver-utils \
     xdg-utils \
+    xterm \
     && rm -rf /var/lib/apt/lists/*
 
 # Install noVNC
 RUN mkdir -p /usr/local/novnc \
-    && curl -sSL https://github.com/novnc/noVNC/archive/v1.2.0.tar.gz | tar -xzC /usr/local/novnc --strip-components=1 \
+    && curl -sSL https://github.com/novnc/noVNC/archive/v1.5.0.tar.gz | tar -xzC /usr/local/novnc --strip-components=1 \
     && mkdir -p /usr/local/novnc/utils/websockify \
-    && curl -sSL https://github.com/novnc/websockify/archive/v0.9.0.tar.gz | tar -xzC /usr/local/novnc/utils/websockify --strip-components=1
+    && curl -sSL https://github.com/novnc/websockify/archive/v0.12.0.tar.gz | tar -xzC /usr/local/novnc/utils/websockify --strip-components=1
 
 # Optional tools for Docker-in-Docker or Kubernetes development
 # Uncomment if needed:
@@ -61,6 +62,14 @@ RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
     && apt-get update \
     && apt-get install -y /tmp/chrome.deb || apt-get -y -f install \
     && rm /tmp/chrome.deb \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Google Antigravity
+RUN mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://us-central1-apt.pkg.dev/doc/repo-signing-key.gpg | gpg --dearmor -o /etc/apt/keyrings/antigravity-repo-key.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/antigravity-repo-key.gpg] https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev/ antigravity-debian main" | tee /etc/apt/sources.list.d/antigravity.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y antigravity \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Docker CE
@@ -98,9 +107,29 @@ COPY --chown=vscode:vscode <<EOF /home/vscode/.vnc/xstartup
 #!/bin/bash
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-fluxbox &
+xsetroot -cursor_name left_ptr
+fluxbox
 EOF
 RUN chmod +x /home/vscode/.vnc/xstartup
+
+# Create Fluxbox menu
+RUN mkdir -p /home/vscode/.fluxbox
+COPY --chown=vscode:vscode <<EOF /home/vscode/.fluxbox/menu
+[begin] (Development)
+  [exec] (Terminal) {xterm}
+  [exec] (Google Chrome) {google-chrome}
+  [exec] (Antigravity) {antigravity}
+  [separator]
+  [submenu] (Fluxbox)
+    [config] (Configuration)
+    [submenu] (Styles) {/usr/share/fluxbox/styles}
+    [end]
+    [reconfig] (Reconfigure)
+    [restart] (Restart)
+    [exit] (Exit)
+  [end]
+[end]
+EOF
 
 # Expose ports
 # 8080: Application server
