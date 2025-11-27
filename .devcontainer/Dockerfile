@@ -108,17 +108,18 @@ COPY --chown=vscode:vscode <<EOF /home/vscode/.vnc/xstartup
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 xsetroot -cursor_name left_ptr
-fluxbox
+# Start D-Bus session for apps requiring it (like Chrome/Antigravity auth)
+exec dbus-launch --exit-with-session fluxbox
 EOF
 RUN chmod +x /home/vscode/.vnc/xstartup
 
 # Create Fluxbox menu
-RUN mkdir -p /home/vscode/.fluxbox
+RUN mkdir -p /home/vscode/.fluxbox && chown vscode:vscode /home/vscode/.fluxbox
 COPY --chown=vscode:vscode <<EOF /home/vscode/.fluxbox/menu
 [begin] (Development)
   [exec] (Terminal) {xterm}
-  [exec] (Google Chrome) {google-chrome}
-  [exec] (Antigravity) {antigravity}
+  [exec] (Google Chrome) {google-chrome --no-sandbox --disable-gpu}
+  [exec] (Antigravity) {env DONT_PROMPT_WSL_INSTALL=1 antigravity --no-sandbox --disable-gpu}
   [separator]
   [submenu] (Fluxbox)
     [config] (Configuration)

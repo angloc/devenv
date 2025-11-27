@@ -40,6 +40,8 @@ services:
     # Docker-in-Docker requires privileged mode
     privileged: true
     init: true
+    # Increase shared memory to prevent Chrome crashes
+    shm_size: '2gb'
     security_opt:
       - seccomp:unconfined
     
@@ -61,10 +63,21 @@ services:
         
         sudo chown -R vscode:vscode /home/vscode/.vnc
         mkdir -p /home/vscode/.vnc
+        # Create new config dir to prevent migration failure
+        mkdir -p /home/vscode/.config/tigervnc
+        sudo chown -R vscode:vscode /home/vscode/.config
+
         echo "vscode" | vncpasswd -f > /home/vscode/.vnc/passwd
         chmod 600 /home/vscode/.vnc/passwd
+        
+        # Copy config files to new location to satisfy TigerVNC
+        cp /home/vscode/.vnc/passwd /home/vscode/.config/tigervnc/passwd || true
+        cp /home/vscode/.vnc/xstartup /home/vscode/.config/tigervnc/xstartup || true
+        chmod 600 /home/vscode/.config/tigervnc/passwd || true
+        chmod 755 /home/vscode/.config/tigervnc/xstartup || true
+
         # Start VNC with localhost no to avoid IPv4/IPv6 binding issues
-        vncserver :1 -geometry 1920x1080 -depth 24 -localhost no
+        vncserver :1 -geometry 1920x1080 -depth 24 -localhost no -rfbauth /home/vscode/.vnc/passwd
         
         # Debug VNC startup
         sleep 1
